@@ -12,7 +12,7 @@ enum Awnser {
   Incorrect,
 }
 
-const page: FC<pageProps> = ({}) => {
+const Page: FC<pageProps> = ({}) => {
   //Fetch deck
   const [usedCards, setUsedCards] = useState<boolean[]>(
     Array(words.length).fill(false)
@@ -161,4 +161,4 @@ const page: FC<pageProps> = ({}) => {
   );
 };
 
-export default page;
+export default Page;
