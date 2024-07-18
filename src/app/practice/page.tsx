@@ -1,8 +1,15 @@
 import { getDeck } from "../lib/utils";
+import BackButton from "./BackButton";
 import PracticeQuizz from "./PracticeQuizz";
+import TopBar from "./TopBar";
 
 export default async function Page() {
   const words = await getDeck(200);
 
-  return <PracticeQuizz Words={words} />;
+  return (
+    <div className="bg-gray-50 h-screen">
+      <TopBar />
+      <PracticeQuizz Words={words} />
+    </div>
+  );
 }
