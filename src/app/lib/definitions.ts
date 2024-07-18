@@ -3,3 +3,9 @@ export type Word = {
   native: string;
   translation: string;
 };
+
+export enum Awnser {
+  Pending,
+  Correct,
+  Incorrect,
+}

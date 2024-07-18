@@ -2,13 +2,9 @@
 
 import { FC, useEffect, useState } from "react";
 import { Word } from "@prisma/client";
+import { Awnser } from "../lib/definitions";
 import ProgressBar from "./ProgressBar";
-
-enum Awnser {
-  Pending,
-  Correct,
-  Incorrect,
-}
+import Flashcard from "./Flashcard";
 
 interface PracticeQuizzProps {
   Words: Word[];
@@ -101,55 +97,20 @@ const PracticeQuizz: FC<PracticeQuizzProps> = ({ Words }) => {
 
   if (!card && !finishedDeck) return <p>loading</p>;
 
-  if (!finishedDeck) {
+  if (!finishedDeck && card) {
     return (
       <div className="flex flex-col gap-6">
         <ProgressBar Current={correct + incorrect} Max={Words.length} />
-        <div className="flex items-center flex-col mx-auto w-3/5 gap-2">
-          <div className="flex items-center justify-center w-full h-28 font-semibold text-xl bg-gray-700 px-4 py-2 rounded-3xl text-gray-50 border-2 border-blue-400 outline  outline-gray-700 outline-2">
-            <p>{card?.native}</p>
-          </div>
-
-          <div className="w-full h-28">
-            {answered === Awnser.Pending ? (
-              <div className="grid grid-cols-2 w-full h-full gap-3">
-                {choices.map((awnser) => (
-                  <div
-                    key={awnser?.id}
-                    className="text-center bg-gray-700 p-2 rounded-3xl text-gray-50 border-2 border-blue-400 outline  outline-gray-700 outline-2 hover:bg-gray-500 hover:outline-gray-500 hover:border-blue-300"
-                    onClick={() => checkAnwser(awnser)}
-                  >
-                    {awnser?.translation}
-                  </div>
-                ))}
-              </div>
-            ) : answered === Awnser.Correct ? (
-              <div
-                className="flex items-center justify-center text-center w-full h-full bg-gray-700 p-2 rounded-3xl text-gray-50 border-2 border-green-400 outline  outline-gray-700 outline-2 hover:cursor-pointer"
-                onClick={() => {
-                  getNextCard();
-                  setAnswered(Awnser.Pending);
-                }}
-              >
-                <p>Correct, click to continue</p>
-              </div>
-            ) : (
-              <div
-                className="flex items-center justify-center text-center w-full h-full bg-gray-700 p-2 rounded-3xl text-gray-50 border-2 border-red-400 outline  outline-gray-700 outline-2 hover:cursor-pointer"
-                onClick={() => {
-                  getNextCard();
-                  setAnswered(Awnser.Pending);
-                }}
-              >
-                <p>
-                  Incorrect, awnser was{" "}
-                  <span className="font-bold">{card?.translation}</span>. Click
-                  to continue
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <Flashcard
+          Card={card}
+          Choices={choices}
+          AwnserState={answered}
+          onCheckAwnser={checkAnwser}
+          onContinueNextCard={() => {
+            getNextCard();
+            setAnswered(Awnser.Pending);
+          }}
+        />
       </div>
     );
   }

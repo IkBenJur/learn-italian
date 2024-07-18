@@ -1,5 +1,4 @@
 import { getDeck } from "../lib/utils";
-import BackButton from "./BackButton";
 import PracticeQuizz from "./PracticeQuizz";
 import TopBar from "./TopBar";
 
