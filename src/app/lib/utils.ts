@@ -1,4 +1,7 @@
+import { Prisma, User, Word } from "@prisma/client";
 import prisma from "./prisma";
+import { QualityOfAwnserRetrieval } from "./definitions";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export async function getHundredRandomWords() {
   let randomNum = Math.floor(Math.random() * 1000 + 1);
@@ -10,4 +13,73 @@ export async function getHundredRandomWords() {
   const words = await prisma.word.findMany({ take: 100, skip: randomNum });
 
   return words;
+}
+
+export async function setNextIntervalForWordReview(
+  word: Word,
+  user: User,
+  retrieval: QualityOfAwnserRetrieval
+) {
+  const metrics = await prisma.wordMetricForUser.findFirst({
+    where: {
+      word: word,
+      user: user,
+    },
+  });
+
+  if (!metrics) {
+    return;
+  }
+
+  if (retrieval >= 3) {
+    if (metrics.repitition === 0) {
+      const dateString = metrics.NextReviewDate.toDateString();
+      const date = new Date(dateString);
+      date.setUTCDate(date.getUTCDate() + 1);
+      metrics.NextReviewDate = date;
+      metrics.dateInterval = 1;
+    } else if (metrics.repitition === 1) {
+      const dateString = metrics.NextReviewDate.toDateString();
+      const date = new Date(dateString);
+      date.setUTCDate(date.getUTCDate() + 6);
+      metrics.NextReviewDate = date;
+      metrics.dateInterval = 6;
+    } else {
+      const dateString = metrics.NextReviewDate.toDateString();
+      const date = new Date(dateString);
+      const newValue = Math.ceil(
+        metrics.dateInterval * metrics.easeFactor.toNumber()
+      );
+      date.setUTCDate(date.getUTCDate() + newValue);
+      metrics.NextReviewDate = date;
+      metrics.dateInterval = newValue;
+    }
+
+    metrics.repitition += 1;
+
+    const prevEaseFactor = metrics.easeFactor.toNumber();
+    metrics.easeFactor = new Prisma.Decimal(
+      Math.round(
+        (prevEaseFactor +
+          (0.1 - (5 - retrieval) * (0.08 + (5 - retrieval) * 0.02))) *
+          100
+      ) / 100
+    );
+  } else {
+    metrics.repitition = 0;
+    const dateString = metrics.NextReviewDate.toDateString();
+    const date = new Date(dateString);
+    date.setUTCDate(date.getUTCDate() + 1);
+    metrics.NextReviewDate = date;
+    metrics.dateInterval = 1;
+  }
+
+  if (metrics.easeFactor.toNumber() < 1.3) {
+    metrics.easeFactor = new Decimal(1.3);
+  }
+
+  await prisma.wordMetricForUser.update({
+    data: metrics,
+    where: { id: metrics.id },
+  });
 }
