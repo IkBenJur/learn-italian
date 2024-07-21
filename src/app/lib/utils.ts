@@ -83,3 +83,33 @@ export async function setNextIntervalForWordReview(
     where: { id: metrics.id },
   });
 }
+
+export async function createNewUser(mail: string, name: string) {
+  try {
+    const allWords: Word[] = await prisma.word.findMany();
+    const wordIds = allWords.map((word) => {
+      return {
+        wordId: word.id,
+      };
+    });
+
+    await prisma.user.create({
+      data: {
+        email: mail,
+        name: name,
+        WordMetricForUser: {
+          createMany: { data: wordIds },
+        },
+      },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      console.log(
+        "There is a unique constraint violation, a new user cannot be created with this email"
+      );
+    }
+    return false;
+  }
+
+  return true;
+}
